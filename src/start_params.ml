@@ -5,7 +5,7 @@ open Async
 type ('result, 'exit, 'incoming, 'runtime_start_params) t =
   { runtime_start_params : 'runtime_start_params
   ; optimize : bool
-  ; target_frames_per_second : int
+  ; target_frames_per_second : float
   ; time_source : Time_source.t
   ; get_view_and_handler : 'result -> View.With_handler.t
   ; handle_incoming : 'result -> 'incoming -> unit Effect.t
@@ -26,13 +26,15 @@ let sanity_check_exn
   ; app = _
   }
   =
-  if target_frames_per_second < 1
+  let smallest_fps_allowed = 0.001 in
+  if Float.O.(target_frames_per_second < smallest_fps_allowed)
   then
     raise_s
       [%message
-        "Assertion failure: [target_frames_per_second < 1]"
-          (target_frames_per_second : int)
-          "please pick a value >= 1"]
+        "Assertion failure: [target_frames_per_second < smallest_fps_allowed]"
+          (target_frames_per_second : float)
+          (smallest_fps_allowed : float)
+          "please pick a value >= smallest_fps_allowed"]
 ;;
 
 let create_exn
@@ -45,7 +47,7 @@ let create_exn
   ~app
   =
   let optimize = Option.value ~default:true optimize
-  and target_frames_per_second = Option.value ~default:60 target_frames_per_second
+  and target_frames_per_second = Option.value ~default:60.0 target_frames_per_second
   and time_source = Option.value_or_thunk ~default:Time_source.wall_clock time_source in
   let out =
     { runtime_start_params

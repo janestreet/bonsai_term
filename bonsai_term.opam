@@ -15,15 +15,17 @@ depends: [
   "async"
   "bonsai"
   "core"
-  "core_unix"
   "notty_async"
   "ppx_jane"
   "unboxed_datatypes"
   "virtual_dom"
   "dune"              {>= "3.17.0"}
-  "notty-community"   {= "0.2.4+ox"}
+  "notty-community"   {>= "0.2.4"}
 ]
 available: arch != "x86_32"
+conflicts: [
+  "oxcaml-compiler" {< "5.2.0minus39"}
+]
 synopsis: "A library for building dynamic terminal apps, using bonsai"
 description: "
 Bonsai_term is a library for building reusable TUI components and apps inside an

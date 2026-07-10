@@ -116,7 +116,7 @@ val start
   -> ?writer:Writer.t
   -> ?time_source:Async.Time_source.t
   -> ?optimize:bool
-  -> ?target_frames_per_second:int
+  -> ?target_frames_per_second:float
   -> ?for_mocking:Notty_async.For_mocking.t
   -> (dimensions:Dimensions.t Bonsai.t
       -> local_ Bonsai.graph
@@ -138,13 +138,34 @@ val start_with_exit
   -> ?writer:Writer.t
   -> ?time_source:Async.Time_source.t
   -> ?optimize:bool
-  -> ?target_frames_per_second:int
+  -> ?target_frames_per_second:float
   -> ?for_mocking:Notty_async.For_mocking.t
   -> (exit:('exit -> unit Effect.t)
       -> dimensions:Dimensions.t Bonsai.t
       -> local_ Bonsai.graph
       -> view:View.t Bonsai.t * handler:(Event.t -> unit Effect.t) Bonsai.t)
   -> 'exit Async.Deferred.Or_error.t
+
+(** [start_with_exit_result] is like [start_with_exit] but instead of returning an
+    [Or_error.t] when the incoming events pipe closes, it returns a [Result.t] that
+    distinguishes between a normal exit (via [exit]) and the incoming events pipe being
+    closed. This is useful when your app needs to know _why_ it stopped running. *)
+val start_with_exit_result
+  :  ?dispose:bool
+  -> ?nosig:bool
+  -> ?mouse:Mouse_reporting.t
+  -> ?bpaste:bool
+  -> ?reader:Reader.t
+  -> ?writer:Writer.t
+  -> ?time_source:Async.Time_source.t
+  -> ?optimize:bool
+  -> ?target_frames_per_second:float
+  -> ?for_mocking:Notty_async.For_mocking.t
+  -> (exit:('exit -> unit Effect.t)
+      -> dimensions:Dimensions.t Bonsai.t
+      -> local_ Bonsai.graph
+      -> view:View.t Bonsai.t * handler:(Event.t -> unit Effect.t) Bonsai.t)
+  -> ('exit, [ `Incoming_events_pipe_closed ]) Result.t Async.Deferred.Or_error.t
 
 (** [start_with_driver] starts a Bonsai_term app in the background and gives you access to
     a [Driver.t]. This lets you the caller do things like:
@@ -162,7 +183,7 @@ val start_with_driver
   -> ?writer:Writer.t
   -> ?time_source:Async.Time_source.t
   -> ?optimize:bool
-  -> ?target_frames_per_second:int
+  -> ?target_frames_per_second:float
   -> ?for_mocking:Notty_async.For_mocking.t
   -> get_view_and_handler:('result -> View.With_handler.t)
   -> handle_incoming:('result -> 'incoming -> unit Effect.t)
@@ -220,7 +241,7 @@ module Private : sig
       -> time_source:Time_source.t option
       -> for_mocking:Notty_async.For_mocking.t option
       -> optimize:bool option
-      -> target_frames_per_second:int option
+      -> target_frames_per_second:float option
       -> get_view_and_handler:('result -> View.With_handler.t)
       -> handle_incoming:('result -> 'incoming -> unit Effect.t)
       -> (exit:('exit -> unit Effect.t)

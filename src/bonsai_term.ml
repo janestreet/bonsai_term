@@ -16,6 +16,7 @@ module Driver = Driver
 include Geom
 
 let start_with_exit = Loop.start_with_exit
+let start_with_exit_result = Loop.start_with_exit_result
 let start_with_driver = Loop.start_with_driver
 let start = Loop.start
 

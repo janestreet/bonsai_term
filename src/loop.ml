@@ -2,11 +2,19 @@ open! Core
 open Bonsai
 open Async
 
-let rec run_driver_until_exit driver =
+let rec run_driver_until_exit_result driver =
   let%bind (`Frame_painted finish_frame) = Driver.compute_frame driver in
   match%bind finish_frame with
-  | `Frame_finished (Exit exit) -> Deferred.Or_error.return exit
+  | `Frame_finished (Exit exit) -> return (Ok exit)
   | `Frame_finished Incoming_events_pipe_closed ->
+    return (Error `Incoming_events_pipe_closed)
+  | `Frame_finished Continue -> run_driver_until_exit_result driver [@tail]
+;;
+
+let run_driver_until_exit driver =
+  match%bind run_driver_until_exit_result driver with
+  | Ok exit -> Deferred.Or_error.return exit
+  | Error `Incoming_events_pipe_closed ->
     Deferred.Or_error.error_s
       [%message
         "Bonsai Term app was closed early. The stdin to the app was closed. If this is \
@@ -15,12 +23,12 @@ let rec run_driver_until_exit driver =
          consider using the bonsai_term_test or bonsai_integration_test libraries \
          instead or alternatively consider mocking out the ?reader, ?writer and \
          ?for_mocking paramters to [Bonsai_term.start]."]
-  | `Frame_finished Continue -> run_driver_until_exit driver [@tail]
 ;;
 
-let start_driver_with_exit driver =
+let start_driver_with_exit_result driver =
   Driver.compute_first_frame driver;
-  run_driver_until_exit driver
+  let%bind result = run_driver_until_exit_result driver in
+  Deferred.Or_error.return result
 ;;
 
 let stitch (~view, ~handler) =
@@ -123,7 +131,7 @@ let start_with_driver
     app
 ;;
 
-let start_with_exit
+let start_with_exit_result
   ?dispose
   ?nosig
   ?mouse
@@ -150,7 +158,48 @@ let start_with_exit
     ~get_view_and_handler:Fn.id
     ~handle_incoming:(fun _ incoming -> Nothing.unreachable_code incoming)
     (fun ~exit ~dimensions graph -> stitch (app ~exit ~dimensions graph))
-    start_driver_with_exit
+    start_driver_with_exit_result
+;;
+
+let start_with_exit
+  ?dispose
+  ?nosig
+  ?mouse
+  ?bpaste
+  ?reader
+  ?writer
+  ?time_source
+  ?optimize
+  ?target_frames_per_second
+  ?for_mocking
+  app
+  =
+  let open Deferred.Or_error.Let_syntax in
+  let%bind result =
+    start_with_exit_result
+      ?dispose
+      ?nosig
+      ?mouse
+      ?bpaste
+      ?reader
+      ?writer
+      ?time_source
+      ?optimize
+      ?target_frames_per_second
+      ?for_mocking
+      app
+  in
+  match result with
+  | Ok exit -> return exit
+  | Error `Incoming_events_pipe_closed ->
+    Deferred.Or_error.error_s
+      [%message
+        "Bonsai Term app was closed early. The stdin to the app was closed. If this is \
+         in prod, and you expect your TUI's stdin's to be closed in practice, please \
+         reach out to bonsai-term devs about your use case. If you are writing a test, \
+         consider using the bonsai_term_test or bonsai_integration_test libraries \
+         instead or alternatively consider mocking out the ?reader, ?writer and \
+         ?for_mocking paramters to [Bonsai_term.start]."]
 ;;
 
 let make_app_exit_on_ctrlc app =

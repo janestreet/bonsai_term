@@ -1,8 +1,8 @@
 (library
  (name bonsai_term)
  (public_name bonsai_term)
- (libraries async bonsai bonsai.driver core core_unix notty-community
-   notty_async notty-community.unix core_unix.signal_unix
-   virtual_dom.ui_effect virtual_dom.ui_effect_of_deferred unboxed_datatypes)
+ (libraries async bonsai bonsai.driver core notty-community notty_async
+   notty-community.unix virtual_dom.ui_effect
+   virtual_dom.ui_effect_of_deferred unboxed_datatypes)
  (preprocess
   (pps ppx_jane bonsai.ppx_bonsai)))

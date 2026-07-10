@@ -5,7 +5,7 @@ open Async
 type ('result, 'exit, 'incoming, 'runtime_start_params) t = private
   { runtime_start_params : 'runtime_start_params
   ; optimize : bool
-  ; target_frames_per_second : int
+  ; target_frames_per_second : float
   ; time_source : Time_source.t
   ; get_view_and_handler : 'result -> View.With_handler.t
   ; handle_incoming : 'result -> 'incoming -> unit Effect.t
@@ -20,7 +20,7 @@ val create_exn
   :  runtime_start_params:'runtime_start_params
   -> time_source:Time_source.t option
   -> optimize:bool option
-  -> target_frames_per_second:int option
+  -> target_frames_per_second:float option
   -> get_view_and_handler:('result -> View.With_handler.t)
   -> handle_incoming:('result -> 'incoming -> unit Effect.t)
   -> app:

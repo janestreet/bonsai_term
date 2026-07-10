@@ -30,7 +30,7 @@ let create
   (module Runtime : Runtime_intf.S with type Start_params.t = runtime_start_params)
   =
   let clock = State_management.For_clock.create time_source
-  and target_delay = Time_ns.Span.of_sec (1.0 /. Float.of_int target_frames_per_second) in
+  and target_delay = Time_ns.Span.of_sec (1.0 /. target_frames_per_second) in
   let%bind term = Term.create runtime_start_params (module Runtime) ~time_source () in
   let dimensions_manager = State_management.For_dimensions.create ~term
   and exit_manager = State_management.For_exit.create () in

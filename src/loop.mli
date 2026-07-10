@@ -22,7 +22,7 @@ type 'ret common_start_args :=
   -> ?writer:Writer.t
   -> ?time_source:Time_source.t
   -> ?optimize:bool
-  -> ?target_frames_per_second:int
+  -> ?target_frames_per_second:float
   -> ?for_mocking:Notty_async.For_mocking.t
   -> 'ret
 
@@ -30,6 +30,11 @@ val start : (common_app_fn -> unit Deferred.Or_error.t) common_start_args
 
 val start_with_exit
   : ((exit:('exit -> unit Effect.t) -> common_app_fn) -> 'exit Deferred.Or_error.t)
+      common_start_args
+
+val start_with_exit_result
+  : ((exit:('exit -> unit Effect.t) -> common_app_fn)
+     -> ('exit, [ `Incoming_events_pipe_closed ]) Result.t Deferred.Or_error.t)
       common_start_args
 
 val start_with_driver
@@ -54,7 +59,7 @@ module For_testing : sig
     -> time_source:Time_source.t option
     -> for_mocking:Notty_async.For_mocking.t option
     -> optimize:bool option
-    -> target_frames_per_second:int option
+    -> target_frames_per_second:float option
     -> get_view_and_handler:('result -> View.With_handler.t)
     -> handle_incoming:('result -> 'incoming -> unit Effect.t)
     -> ('result, 'exit) app_with_exit_fn
@@ -79,7 +84,7 @@ module For_other_bonsais : sig
     -> (module Runtime_intf.S with type Start_params.t = 'runtime_start_params)
     -> ?time_source:Async.Time_source.t
     -> ?optimize:bool
-    -> ?target_frames_per_second:int
+    -> ?target_frames_per_second:float
     -> get_view_and_handler:('result -> View.With_handler.t)
     -> handle_incoming:('result -> 'incoming -> unit Ui_effect.t)
     -> (exit:('exit -> unit Ui_effect.t)
